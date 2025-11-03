@@ -3,49 +3,150 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RifqyStudy – Belajar 10x Cepat</title>
+  <title>RifqyStudy – Rekam & AI Soal</title>
   <link rel="manifest" href="manifest.json">
   <link rel="icon" href="icon.png" type="image/png">
-  <meta name="theme-color" content="#ff6b6b">
+  <meta name="theme-color" content="#e74c3c">
   <style>
     :root {
-      --primary: #ff6b6b;
-      --bg: #0a0a1a;
-      --card: #1a1a2e;
-      --text: #ffffff;
-      --border: rgba(255, 107, 107, 0.4);
-    }
-    @media (prefers-color-scheme: light) {
-      :root { --bg: #f8f9fa; --card: #ffffff; --text: #212529; --border: rgba(255,107,107,0.6); }
+      --primary: #e74c3c;
+      --bg: #1a1a2e;
+      --card: #16213e;
+      --text: #e0e0e0;
+      --border: rgba(231,76,60,0.3);
+      --radius: 24px;
+      --gap: 20px;
+      --padding: 28px;
+      --shadow: 0 12px 32px rgba(0,0,0,0.2);
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding: 20px; }
-    .container { max-width: 600px; margin: 0 auto; }
-    .header { text-align: center; margin-bottom: 24px; }
-    h1 { font-size: 28px; color: var(--primary); margin-bottom: 8px; }
-    .subtitle { opacity: 0.8; font-size: 15px; }
-    .card { background: var(--card); border-radius: 24px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); border: 1px solid var(--border); margin-bottom: 20px; }
-    .controls { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; }
-    button { background: var(--primary); color: #000; border: none; padding: 14px 20px; border-radius: 16px; font-weight: 600; cursor: pointer; font-size: 15px; transition: all 0.2s; flex: 1; min-width: 120px; }
-    button:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255,107,107,0.4); }
-    button.recording { background: #00ff88; animation: pulse 1.5s infinite; }
-    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
-    .btn-secondary { background: rgba(255,255,255,0.1); color: var(--text); }
-    select { padding: 14px; border-radius: 16px; background: rgba(0,0,0,0.1); color: var(--text); border: 2px solid var(--border); flex: 1; }
-    .timer { font-family: 'Courier New', monospace; font-size: 18px; font-weight: bold; color: var(--primary); text-align: center; margin: 12px 0; padding: 8px; background: rgba(255,107,107,0.1); border-radius: 12px; display: none; }
-    .pomodoro { font-family: 'Courier New', monospace; font-size: 24px; font-weight: bold; color: var(--primary); text-align: center; margin: 12px 0; padding: 12px; background: rgba(255,107,107,0.1); border-radius: 16px; display: none; }
-    textarea { width: 100%; padding: 16px; border: 2px solid var(--border); border-radius: 16px; background: rgba(0,0,0,0.1); color: var(--text); font-size: 16px; resize: vertical; min-height: 120px; margin-bottom: 16px; }
-    .ai-output { background: rgba(255,107,107,0.15); padding: 16px; border-radius: 16px; border-left: 4px solid var(--primary); margin: 16px 0; display: none; }
-    .notes-list { margin-top: 20px; }
-    .note-item { background: rgba(255,255,255,0.05); padding: 16px; border-radius: 16px; margin-bottom: 12px; border: 1px solid var(--border); }
-    .note-actions { display: flex; gap: 8px; font-size: 13px; }
-    .note-actions button { padding: 6px 12px; font-size: 13px; flex: 1; }
-    .empty-state { text-align: center; padding: 40px 20px; opacity: 0.6; font-style: italic; }
-    .limit { color: #ff6b6b; font-size: 14px; text-align: center; margin: 12px 0; }
-    footer { text-align: center; margin-top: 32px; font-size: 13px; opacity: 0.7; }
+    body { 
+      font-family: 'Segoe UI', sans-serif; 
+      background: var(--bg); 
+      color: var(--text); 
+      min-height: 100vh; 
+      padding: var(--gap); 
+    }
+
+    .container { max-width: 900px; margin: 0 auto; }
+    .header { text-align: center; margin-bottom: 32px; }
+    h1 { font-size: 36px; color: var(--primary); margin-bottom: 8px; font-weight: 700; }
+    .subtitle { font-size: 18px; margin-bottom: 4px; }
+    .limit { font-size: 16px; color: #e74c3c; }
+
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: var(--padding);
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      margin-bottom: var(--gap);
+    }
+
+    /* REKAM SUARA */
+    .recorder {
+      display: flex;
+      gap: 14px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .btn-rec {
+      background: var(--primary);
+      color: white;
+      padding: 16px 24px;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 17px;
+      min-width: 120px;
+      text-align: center;
+    }
+    select {
+      flex: 1;
+      padding: 16px 20px;
+      border-radius: 20px;
+      background: #2d3436;
+      color: white;
+      border: none;
+      font-size: 17px;
+    }
+
+    .pomodoro {
+      text-align: center;
+      padding: 20px;
+      background: #2d3436;
+      border-radius: 20px;
+      font-size: 24px;
+      font-weight: bold;
+      margin: 20px 0;
+    }
+
+    /* TRANSCRIPT — BERSIH, TANPA DOUBLE */
+    .transcript {
+      background: #2d3436;
+      padding: 20px;
+      border-radius: 20px;
+      min-height: 120px;
+      font-size: 16px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      border: 2px solid transparent;
+      transition: border 0.3s;
+    }
+    .transcript.recording {
+      border-color: var(--primary);
+      animation: pulse 1.5s infinite;
+    }
+
+    /* TOMBOL AKSI */
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-top: 20px;
+    }
+    .btn-action {
+      padding: 16px;
+      border-radius: 20px;
+      background: #2d3436;
+      color: white;
+      text-align: center;
+      font-weight: 600;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .btn-action:hover { background: #3a3f50; }
+
+    /* MATERI TERSIMPAN */
+    .saved-materials {
+      grid-column: 1 / -1;
+    }
+    .saved-materials h3 {
+      text-align: center;
+      margin-bottom: 16px;
+      font-size: 18px;
+    }
+    #saved-list {
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    .material-item {
+      padding: 16px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      font-size: 15px;
+    }
+
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(231,76,60,0.4); }
+      70% { box-shadow: 0 0 0 10px rgba(231,76,60,0); }
+      100% { box-shadow: 0 0 0 0 rgba(231,76,60,0); }
+    }
+
+    .hidden { display: none; }
   </style>
 </head>
 <body>
+
   <div class="container">
     <div class="header">
       <h1>RifqyStudy</h1>
@@ -53,209 +154,162 @@
       <p class="limit">Batas rekam: 10 menit (versi gratis)</p>
     </div>
 
+    <!-- CARD UTAMA -->
     <div class="card">
-      <div class="controls">
-        <button id="record-btn" onclick="toggleRecord()">Rekam</button>
+      <!-- REKAM & MATA PELAJARAN -->
+      <div class="recorder">
+        <div class="btn-rec" id="recBtn">Rekam</div>
         <select id="subject">
           <option>IPA</option>
           <option>IPS</option>
           <option>Matematika</option>
-          <option>Bahasa</option>
+          <option>Bahasa Indonesia</option>
+          <option>Ppkn</option>
         </select>
-        <button class="btn-secondary" onclick="startPomodoro()">Pomodoro</button>
       </div>
 
-      <div id="timer" class="timer">00:00:00</div>
-      <div id="pomodoro" class="pomodoro">25:00</div>
+      <!-- POMODORO -->
+      <div class="pomodoro" id="pomodoro">25:00</div>
 
-      <textarea id="note-input" placeholder="Hasil rekaman muncul di sini..."></textarea>
-
-      <div class="controls">
-        <button class="btn-secondary" onclick="generateSummary()">Ringkas</button>
-        <button class="btn-secondary" onclick="generateQuiz()">Buat Soal</button>
-        <button class="btn-secondary" onclick="exportPDF()">PDF</button>
-        <button class="btn-secondary" onclick="saveNote()">Simpan</button>
+      <!-- TRANSCRIPT — BERSIH -->
+      <div class="transcript" id="transcript">
+        Tekan "Rekam" untuk mulai merekam suara guru...
       </div>
 
-      <div id="ai-output" class="ai-output">
-        <strong>Hasil AI:</strong><br>
-        <div id="ai-text"></div>
+      <!-- TOMBOL AKSI -->
+      <div class="actions">
+        <div class="btn-action" onclick="generateSummary()">Ringkas</div>
+        <div class="btn-action" onclick="generateQuestion()">Buat Soal</div>
+        <div class="btn-action" onclick="exportPDF()">PDF</div>
+        <div class="btn-action" onclick="saveMaterial()">Simpan</div>
       </div>
     </div>
 
-    <div class="card">
+    <!-- MATERI TERSIMPAN -->
+    <div class="card saved-materials">
       <h3>Materi Tersimpan</h3>
-      <div id="notes-list">
-        <div class="empty-state">Belum ada materi.</div>
+      <div id="saved-list">
+        <div style="text-align:center; opacity:0.6; padding:20px 0;">Belum ada materi.</div>
       </div>
     </div>
-
-    <footer>
-      © 2025 RifqyStudy | 
-      <a href="https://wa.me/6287759652715" style="color:var(--primary); text-decoration:none;">Upgrade ke PRO (90 menit)</a>
-    </footer>
   </div>
 
   <script>
-    // BATAS 10 MENIT = 600 detik
-    const MAX_RECORD_TIME = 600;
-    let isRecording = false, startTime, recordTimer, finalTranscript = '';
-    const recordBtn = document.getElementById('record-btn');
-    const timerEl = document.getElementById('timer');
+    let mediaRecorder;
+    let audioChunks = [];
+    let transcript = '';
+    let isRecording = false;
+    let pomodoroInterval;
+    let pomodoroTime = 25 * 60;
+    let savedMaterials = JSON.parse(localStorage.getItem('rifqyStudy_materials') || '[]');
 
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const recognition = SpeechRecognition ? new SpeechRecognition() : null;
-    if (recognition) {
-      recognition.lang = 'id-ID'; recognition.continuous = true; recognition.interimResults = true;
-    }
+    const recBtn = document.getElementById('recBtn');
+    const transcriptEl = document.getElementById('transcript');
+    const pomodoroEl = document.getElementById('pomodoro');
+    const savedList = document.getElementById('saved-list');
 
-    function toggleRecord() {
-      if (!recognition) return alert('Browser tidak mendukung rekam suara.');
-      if (isRecording) {
-        recognition.stop();
-        clearInterval(recordTimer);
-        timerEl.style.display = 'none';
-        recordBtn.textContent = 'Rekam';
-        recordBtn.classList.remove('recording');
-        isRecording = false;
+    // UPDATE SAVED LIST
+    function updateSavedList() {
+      if (savedMaterials.length === 0) {
+        savedList.innerHTML = '<div style="text-align:center; opacity:0.6; padding:20px 0;">Belum ada materi.</div>';
       } else {
-        finalTranscript = document.getElementById('note-input').value || '';
-        startTime = Date.now();
-        recognition.start();
-        recordBtn.textContent = 'Stop';
-        recordBtn.classList.add('recording');
-        timerEl.style.display = 'block';
-        isRecording = true;
-
-        recordTimer = setInterval(() => {
-          const elapsed = Math.floor((Date.now() - startTime) / 1000);
-          const h = String(Math.floor(elapsed / 3600)).padStart(2, '0');
-          const m = String(Math.floor((elapsed % 3600) / 60)).padStart(2, '0');
-          const s = String(elapsed % 60).padStart(2, '0');
-          timerEl.textContent = `${h}:${m}:${s}`;
-
-          if (elapsed >= MAX_RECORD_TIME) {
-            toggleRecord();
-            alert('Batas 10 menit tercapai! Upgrade ke PRO untuk rekam 90 menit.');
-          }
-        }, 500);
+        savedList.innerHTML = savedMaterials.map((m, i) => `
+          <div class="material-item">
+            <strong>${m.subject}</strong> - ${new Date(m.date).toLocaleDateString('id-ID')}
+            <br><small>${m.transcript.substring(0, 80)}...</small>
+          </div>
+        `).join('');
       }
     }
 
-    if (recognition) {
-      recognition.onresult = e => {
-        let interim = '';
-        for (let i = e.resultIndex; i < e.results.length; i++) {
-          const t = e.results[i][0].transcript;
-          if (e.results[i].isFinal) finalTranscript += t + ' ';
-          else interim += t;
-        }
-        document.getElementById('note-input').value = finalTranscript + interim;
-      };
-      recognition.onend = () => { if (isRecording) setTimeout(() => recognition.start(), 100); };
-    }
+    // REKAM SUARA
+    recBtn.addEventListener('click', async () => {
+      if (!isRecording) {
+        // MULAI REKAM
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+        audioChunks = [];
+
+        mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+        mediaRecorder.onstop = () => {
+          const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+          // Simulasi transkripsi (ganti dengan API nanti)
+          setTimeout(() => {
+            transcript = 'Halo, hari ini kita belajar tentang fotosintesis. Daun menyerap cahaya matahari dan karbon dioksida untuk membuat glukosa dan oksigen.';
+            transcriptEl.textContent = transcript;
+          }, 1000);
+        };
+
+        mediaRecorder.start();
+        isRecording = true;
+        recBtn.textContent = 'Stop';
+        recBtn.style.background = '#27ae60';
+        transcriptEl.classList.add('recording');
+        transcriptEl.textContent = 'Merekam... (bicara sekarang)';
+        startPomodoro();
+      } else {
+        // STOP REKAM
+        mediaRecorder.stop();
+        isRecording = false;
+        recBtn.textContent = 'Rekam';
+        recBtn.style.background = 'var(--primary)';
+        transcriptEl.classList.remove('recording');
+        stopPomodoro();
+      }
+    });
 
     // POMODORO
-    let pomodoroInterval;
     function startPomodoro() {
-      let time = 25 * 60;
-      const el = document.getElementById('pomodoro');
-      el.style.display = 'block';
       pomodoroInterval = setInterval(() => {
-        time--;
-        const m = String(Math.floor(time/60)).padStart(2,'0');
-        const s = String(time%60).padStart(2,'0');
-        el.textContent = `${m}:${s}`;
-        if (time <= 0) { clearInterval(pomodoroInterval); el.textContent = 'Waktu Habis!'; }
+        if (pomodoroTime > 0) {
+          pomodoroTime--;
+          const mins = Math.floor(pomodoroTime / 60).toString().padStart(2, '0');
+          const secs = (pomodoroTime % 60).toString().padStart(2, '0');
+          pomodoroEl.textContent = `${mins}:${secs}`;
+        } else {
+          stopPomodoro();
+          alert('Waktu rekam selesai!');
+        }
       }, 1000);
     }
 
-    // AI
+    function stopPomodoro() {
+      clearInterval(pomodoroInterval);
+      pomodoroTime = 25 * 60;
+      pomodoroEl.textContent = '25:00';
+    }
+
+    // AKSI
     function generateSummary() {
-      const text = document.getElementById('note-input').value.trim();
-      if (!text) return alert('Rekam dulu!');
-      const sentences = text.split(/[.!?]/g).map(s => s.trim()).filter(s => s.length > 10);
-      const summary = sentences.slice(0, 3).join('. ') + (sentences.length > 3 ? '...' : '.');
-      showAI(`Ringkasan:\n${summary}`);
+      if (!transcript) return alert('Rekam dulu!');
+      alert('Ringkasan: [Fitur Premium]');
     }
 
-    function generateQuiz() {
-      const text = document.getElementById('note-input').value.trim();
-      if (!text) return alert('Rekam dulu!');
-      const sentences = text.split(/[.!?]/g).map(s => s.trim()).filter(s => s.length > 10);
-      let quiz = `Soal Latihan:\n`;
-      sentences.slice(0, 3).forEach((s, i) => {
-        quiz += `${i+1}. ${s}\n   a) ...\n   b) ...\n`;
-      });
-      showAI(quiz);
+    function generateQuestion() {
+      if (!transcript) return alert('Rekam dulu!');
+      alert('Soal: [Fitur Premium]');
     }
 
-    function showAI(text) {
-      document.getElementById('ai-text').textContent = text;
-      document.getElementById('ai-output').style.display = 'block';
-    }
-
-    // EXPORT PDF
     function exportPDF() {
-      const text = document.getElementById('note-input').value;
-      const subject = document.getElementById('subject').value;
-      const blob = new Blob([`Mata Pelajaran: ${subject}\n\n${text}`], {type: 'text/plain'});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = `${subject}_materi.txt`;
-      a.click();
+      if (!transcript) return alert('Rekam dulu!');
+      alert('PDF: [Fitur Premium]');
     }
 
-    // SIMPAN
-    function saveNote() {
-      const text = document.getElementById('note-input').value.trim();
-      if (!text) return alert('Kosong!');
-      const note = {
-        id: Date.now(),
-        text,
+    function saveMaterial() {
+      if (!transcript) return alert('Rekam dulu!');
+      const material = {
         subject: document.getElementById('subject').value,
-        date: new Date().toLocaleString('id-ID'),
-        ai: document.getElementById('ai-text').textContent
+        transcript,
+        date: new Date().toISOString()
       };
-      const notes = JSON.parse(localStorage.getItem('rifqyStudyNotes') || '[]');
-      notes.unshift(note);
-      localStorage.setItem('rifqyStudyNotes', JSON.stringify(notes));
-      document.getElementById('note-input').value = '';
-      document.getElementById('ai-output').style.display = 'none';
-      loadNotes();
+      savedMaterials.unshift(material);
+      localStorage.setItem('rifqyStudy_materials', JSON.stringify(savedMaterials));
+      updateSavedList();
       alert('Materi tersimpan!');
     }
 
-    function loadNotes() {
-      const notes = JSON.parse(localStorage.getItem('rifqyStudyNotes') || '[]');
-      const list = document.getElementById('notes-list');
-      if (notes.length === 0) { list.innerHTML = '<div class="empty-state">Belum ada materi.</div>'; return; }
-      list.innerHTML = '';
-      notes.forEach(n => {
-        const div = document.createElement('div'); div.className = 'note-item';
-        div.innerHTML = `
-          <div style="font-size:12px; opacity:0.7;">${n.subject} • ${n.date}</div>
-          <div style="margin:8px 0;">${n.text.substring(0,100)}...</div>
-          <div class="note-actions">
-            <button onclick="copy('${n.text.replace(/'/g, "\\'")}')">Salin</button>
-            <button class="btn-secondary" onclick="del(${n.id})">Hapus</button>
-          </div>`;
-        list.appendChild(div);
-      });
-    }
-
-    function copy(t) { navigator.clipboard.writeText(t).then(() => alert('Disalin!')); }
-    function del(id) { 
-      if (confirm('Hapus?')) { 
-        let n = JSON.parse(localStorage.getItem('rifqyStudyNotes')||'[]'); 
-        n = n.filter(x=>x.id!==id); 
-        localStorage.setItem('rifqyStudyNotes', JSON.stringify(n)); 
-        loadNotes(); 
-      } 
-    }
-
     // INIT
-    loadNotes();
+    updateSavedList();
   </script>
 </body>
-</html>
+  </html>
