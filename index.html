@@ -7,6 +7,7 @@
   <link rel="manifest" href="manifest.json">
   <link rel="icon" href="icon.png" type="image/png">
   <meta name="theme-color" content="#e74c3c">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     :root {
       --primary: #e74c3c;
@@ -18,6 +19,8 @@
       --gap: 20px;
       --padding: 28px;
       --shadow: 0 12px 32px rgba(0,0,0,0.2);
+      --success: #27ae60;
+      --warning: #f39c12;
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { 
@@ -43,7 +46,7 @@
       margin-bottom: var(--gap);
     }
 
-    /* REKAM SUARA */
+    /* REKAM */
     .recorder {
       display: flex;
       gap: 14px;
@@ -62,7 +65,7 @@
       cursor: pointer;
     }
     .btn-rec.recording {
-      background: #27ae60;
+      background: var(--success);
     }
     select {
       flex: 1;
@@ -84,7 +87,6 @@
       margin: 20px 0;
     }
 
-    /* TRANSCRIPT */
     .transcript {
       background: #2d3436;
       padding: 20px;
@@ -101,7 +103,6 @@
       animation: pulse 1.5s infinite;
     }
 
-    /* TOMBOL AKSI */
     .actions {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -117,8 +118,25 @@
       font-weight: 600;
       font-size: 16px;
       cursor: pointer;
+      position: relative;
     }
     .btn-action:hover { background: #3a3f50; }
+    .btn-action:disabled {
+      background: #555;
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    .limit-badge {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      background: var(--warning);
+      color: black;
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 10px;
+      font-weight: bold;
+    }
 
     /* MATERI TERSIMPAN */
     .saved-materials h3 {
@@ -155,8 +173,6 @@
       70% { box-shadow: 0 0 0 10px rgba(231,76,60,0); }
       100% { box-shadow: 0 0 0 0 rgba(231,76,60,0); }
     }
-
-    .hidden { display: none; }
   </style>
 </head>
 <body>
@@ -165,12 +181,11 @@
     <div class="header">
       <h1>RifqyStudy</h1>
       <p class="subtitle">Rekam Guru → AI Bikin Soal!</p>
-      <p class="limit">Batas rekam: 10 menit (versi gratis)</p>
+      <p class="limit">PDF, Ringkasan, Soal: Gratis (terbatas)</p>
     </div>
 
     <!-- CARD UTAMA -->
     <div class="card">
-      <!-- REKAM & MATA PELAJARAN -->
       <div class="recorder">
         <div class="btn-rec" id="recBtn">Rekam</div>
         <select id="subject">
@@ -182,19 +197,25 @@
         </select>
       </div>
 
-      <!-- POMODORO -->
       <div class="pomodoro" id="pomodoro">25:00</div>
 
-      <!-- TRANSCRIPT -->
       <div class="transcript" id="transcript">
         Tekan "Rekam" untuk mulai merekam suara guru...
       </div>
 
-      <!-- TOMBOL AKSI -->
       <div class="actions">
-        <div class="btn-action" onclick="generateSummary()">Ringkas</div>
-        <div class="btn-action" onclick="generateQuestion()">Buat Soal</div>
-        <div class="btn-action" onclick="exportPDF()">PDF</div>
+        <div class="btn-action" id="summaryBtn" onclick="generateSummary()">
+          Ringkas
+          <span class="limit-badge" id="summaryLimit">3</span>
+        </div>
+        <div class="btn-action" id="questionBtn" onclick="generateQuestion()">
+          Buat Soal
+          <span class="limit-badge" id="questionLimit">3</span>
+        </div>
+        <div class="btn-action" id="pdfBtn" onclick="exportPDF()">
+          PDF
+          <span class="limit-badge" id="pdfLimit">1</span>
+        </div>
         <div class="btn-action" onclick="saveMaterial()">Simpan</div>
       </div>
     </div>
@@ -209,62 +230,69 @@
   </div>
 
   <script>
+    const { jsPDF } = window.jspdf;
     let recognition;
     let isRecording = false;
     let transcript = '';
     let pomodoroInterval;
     let pomodoroTime = 25 * 60;
     let savedMaterials = JSON.parse(localStorage.getItem('rifqyStudy_materials') || '[]');
+    let usage = JSON.parse(localStorage.getItem('rifqyStudy_usage') || '{"date":"","summary":0,"question":0,"pdf":0}');
 
     const recBtn = document.getElementById('recBtn');
     const transcriptEl = document.getElementById('transcript');
     const pomodoroEl = document.getElementById('pomodoro');
     const savedList = document.getElementById('saved-list');
+    const summaryBtn = document.getElementById('summaryBtn');
+    const questionBtn = document.getElementById('questionBtn');
+    const pdfBtn = document.getElementById('pdfBtn');
 
-    // INIT SPEECH RECOGNITION
+    // CEK BATAS HARIAN
+    function checkDailyLimit() {
+      const today = new Date().toLocaleDateString('id-ID');
+      if (usage.date !== today) {
+        usage = { date: today, summary: 0, question: 0, pdf: 0 };
+        localStorage.setItem('rifqyStudy_usage', JSON.stringify(usage));
+      }
+      document.getElementById('summaryLimit').textContent = 3 - usage.summary;
+      document.getElementById('questionLimit').textContent = 3 - usage.question;
+      document.getElementById('pdfLimit').textContent = 1 - usage.pdf;
+
+      summaryBtn.disabled = usage.summary >= 3;
+      questionBtn.disabled = usage.question >= 3;
+      pdfBtn.disabled = usage.pdf >= 1;
+    }
+
+    // INIT SPEECH
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
       recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
       recognition.lang = 'id-ID';
       recognition.continuous = true;
       recognition.interimResults = true;
 
-      recognition.onresult = (event) => {
-        transcript = Array.from(event.results)
-          .map(result => result[0].transcript)
-          .join('');
+      recognition.onresult = (e) => {
+        transcript = Array.from(e.results).map(r => r[0].transcript).join('');
         transcriptEl.textContent = transcript || 'Merekam...';
       };
-
-      recognition.onerror = () => {
-        alert('Error: Mikrofon gagal. Cek izin akses!');
-        stopRecording();
-      };
-    } else {
-      alert('Browser tidak mendukung Speech Recognition. Gunakan Chrome!');
     }
 
     // TOGGLE REKAM
     recBtn.addEventListener('click', () => {
-      if (!isRecording) {
-        startRecording();
-      } else {
-        stopRecording();
-      }
+      if (!isRecording) startRecording();
+      else stopRecording();
     });
 
     function startRecording() {
-      if (!recognition) return;
       recognition.start();
       isRecording = true;
       recBtn.textContent = 'Stop';
       recBtn.classList.add('recording');
       transcriptEl.classList.add('recording');
-      transcriptEl.textContent = 'Merekam... (bicara sekarang)';
+      transcriptEl.textContent = 'Merekam...';
       startPomodoro();
     }
 
     function stopRecording() {
-      if (!recognition) return;
       recognition.stop();
       isRecording = false;
       recBtn.textContent = 'Rekam';
@@ -278,13 +306,13 @@
       pomodoroInterval = setInterval(() => {
         if (pomodoroTime > 0) {
           pomodoroTime--;
-          const mins = String(Math.floor(pomodoroTime / 60)).padStart(2, '0');
-          const secs = String(pomodoroTime % 60).padStart(2, '0');
-          pomodoroEl.textContent = `${mins}:${secs}`;
+          const m = String(Math.floor(pomodoroTime / 60)).padStart(2, '0');
+          const s = String(pomodoroTime % 60).padStart(2, '0');
+          pomodoroEl.textContent = `${m}:${s}`;
         } else {
           stopPomodoro();
           stopRecording();
-          alert('Waktu rekam selesai!');
+          alert('Waktu habis!');
         }
       }, 1000);
     }
@@ -295,22 +323,49 @@
       pomodoroEl.textContent = '25:00';
     }
 
-    // AKSI
+    // AI RINGKASAN (SIMULASI)
     function generateSummary() {
       if (!transcript) return alert('Rekam dulu!');
-      alert('Ringkasan: [Fitur Premium - Segera Hadir]');
+      if (usage.summary >= 3) return alert('Batas ringkasan harian habis!');
+      usage.summary++;
+      localStorage.setItem('rifqyStudy_usage', JSON.stringify(usage));
+      checkDailyLimit();
+
+      const words = transcript.split(' ').slice(0, 30).join(' ');
+      alert(`Ringkasan:\n\n${words}...`);
     }
 
+    // BUAT SOAL (SIMULASI)
     function generateQuestion() {
       if (!transcript) return alert('Rekam dulu!');
-      alert('Soal: [Fitur Premium - Segera Hadir]');
+      if (usage.question >= 3) return alert('Batas soal harian habis!');
+      usage.question++;
+      localStorage.setItem('rifqyStudy_usage', JSON.stringify(usage));
+      checkDailyLimit();
+
+      alert(`Soal:\n\n1. Apa yang dimaksud dengan fotosintesis?\n2. Sebutkan bahan yang dibutuhkan daun!\n3. Apa hasil dari fotosintesis?`);
     }
 
+    // EXPORT PDF
     function exportPDF() {
       if (!transcript) return alert('Rekam dulu!');
-      alert('PDF: [Fitur Premium - Segera Hadir]');
+      if (usage.pdf >= 1) return alert('Batas PDF harian habis!');
+      usage.pdf++;
+      localStorage.setItem('rifqyStudy_usage', JSON.stringify(usage));
+      checkDailyLimit();
+
+      const doc = new jsPDF();
+      doc.setFontSize(16);
+      doc.text('Materi RifqyStudy', 20, 20);
+      doc.setFontSize(12);
+      doc.text(`Mata Pelajaran: ${document.getElementById('subject').value}`, 20, 35);
+      doc.text(`Tanggal: ${new Date().toLocaleDateString('id-ID')}`, 20, 45);
+      doc.text(transcript, 20, 60, { maxWidth: 170 });
+      doc.save('materi.pdf');
+      alert('PDF berhasil diunduh!');
     }
 
+    // SIMPAN & HAPUS
     function saveMaterial() {
       if (!transcript.trim()) return alert('Rekam dulu!');
       const material = {
@@ -325,16 +380,14 @@
       alert('Materi tersimpan!');
     }
 
-    // HAPUS MATERI
     function deleteMaterial(id) {
-      if (confirm('Yakin hapus materi ini?')) {
+      if (confirm('Hapus materi ini?')) {
         savedMaterials = savedMaterials.filter(m => m.id !== id);
         localStorage.setItem('rifqyStudy_materials', JSON.stringify(savedMaterials));
         updateSavedList();
       }
     }
 
-    // UPDATE LIST
     function updateSavedList() {
       if (savedMaterials.length === 0) {
         savedList.innerHTML = '<div style="text-align:center; opacity:0.6; padding:20px 0;">Belum ada materi.</div>';
@@ -352,6 +405,7 @@
     }
 
     // INIT
+    checkDailyLimit();
     updateSavedList();
   </script>
 </body>
